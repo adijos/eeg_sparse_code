@@ -10,4 +10,6 @@ function [] = plot_recon(original, recon)
         plot(recon(i, :), 'g');
         hold off
     end
+    suptitle('Reconstructions');
+    legend('Original', 'Reconstruction');
 end

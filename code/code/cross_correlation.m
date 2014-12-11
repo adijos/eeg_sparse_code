@@ -11,9 +11,9 @@ padded_r = zeros(N, T + w);
 w_half = floor(w/2);
 
 % Pad r
-for j = 1:T
-    padded_r(:, j + w_half) = r(:, j);
-end
+% for j = 1:T
+%     padded_r(:, j + w_half) = r(:, j);
+% end
 
 % convolve coefficients over all basis elements
 for basis_num = 1:M;

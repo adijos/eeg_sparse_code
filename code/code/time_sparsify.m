@@ -1,5 +1,5 @@
-function a = time_sparsify(I, Phi, lambda)
-% online learning
+function a = time_sparsify(I, Phi, trial)
+% Function to Learn the Sparse Coefficients
 % N = # of dimensions (electrodes)
 % w = size of basis time window
 % M = # of dictionary elements
@@ -13,6 +13,8 @@ beta = 1000;
 sigma = .1;
 eta = 5e-4;
 num_iter = 100;
+
+lambda = 0.1;
 
 
 [N, w, M] = size(Phi);
@@ -33,11 +35,13 @@ for i=1:16;
     subplot(4,4,i)
     plot(error(i,:))
 end
+suptitle(strcat('Coefficient Reconstruction Errror Trial #', int2str(trial)));
 
 figure(3)
 for j = 1:16;
     subplot(4, 4, j)
     plot(a(j, :, 1));
 end
+suptitle(strcat('Basis 1 Sparse Coefficients Trial #', int2str(trial)));
 
 end

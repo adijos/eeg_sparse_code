@@ -17,7 +17,7 @@ for i = 1:num_preictal_segments
         data = load(strcat(base_file_pre, int2str(i)));
     end
     data = getfield(data, strcat('preictal_segment_', int2str(i)));
-    data = data.data(:, 1:sampling_rate:end);
+    data = data.data;
     
     save(strcat('./processed_dog_2/pre_', int2str(i)), 'data');    
      

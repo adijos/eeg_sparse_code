@@ -1,14 +1,15 @@
 % BAYJAM - Dog 2%
 
-num_trials = 100;
+num_trials = 10;
+
 num_pre_data_files = 1;
 num_inter_data_files = 500;
 
-base_pre_file = './processed_dog_2/pre_';
-base_inter_file = './processed_dog_2/inter_';
+base_file_pre = './Dog_2/Dog_2_preictal_segment_00';
+base_file_inter = './Dog_2/Dog_2_interictal_segment_0';
 
 % # of time samples (each file spans 10 minutes, 600 seconds)
-T = 3997;
+T = 239766;
 
 % number of dictionary elements
 M = 16;
@@ -16,10 +17,8 @@ M = 16;
 % number of dimensions (electrodes)
 N = 16;
 
-lambda = 0.1;
-
 % Basis Time window
-w = 125; % Bruno said 125, we should try to figure out why (1/4 of 500 Hz)
+w = 501; % Bruno said 125, we should try to figure out why (1/4 of 500 Hz)
 
 % Phi - Dictionary
 pre_Phi = randn(N, w, M);
@@ -33,7 +32,7 @@ for i = 1:M
 end
 
 % Dictionary Learning Rate
-eta = 1e-5;
+deta = 5e-4;
 
 error = [];
 for t = 1:num_trials
@@ -42,38 +41,41 @@ for t = 1:num_trials
     for i = 1:num_pre_data_files
         sprintf(strcat('Data File #', int2str(i)))
         
-        %Load data file
-        data = load(strcat(base_pre_file, int2str(i), '.mat'));
-        data = data.data; % 16 x time sampling amount
+        if i < 10
+            data = load(strcat(base_file_pre,'0',int2str(i)));
+        else
+            data = load(strcat(base_file_pre, int2str(i)));
+        end
+        data = getfield(data, strcat('preictal_segment_', int2str(i)));
+        data = data.data;
         
         % calculate coefficients for these data
 
-        pre_a = time_sparsify(data, pre_Phi, lambda);
+        pre_a = time_sparsify(data, pre_Phi, t);
         
         recon = reconstruct(pre_Phi, pre_a);
         error = [error, sum((data - recon).^2,2)];
         % update bases
         
         e = data - recon;
-        c = cross_correlation(pre_a, e);
-        dPhi = mean(c, 2);
-        dPhi = repmat(dPhi, 1, w, 1);
-        pre_Phi = pre_Phi + eta * dPhi;
+        dPhi = dict_correlation(pre_a, e, w);
+        pre_Phi = pre_Phi + deta * dPhi;
         
         % normalize dictionary
-        for i = 1:M
-            for t = 1:w
-                pre_Phi(:, t, i) = pre_Phi(:, t, i) * diag(1./sqrt(sum(pre_Phi(:, t, i) .* pre_Phi(:, t, i))));
+        for j = 1:M
+            for k = 1:w
+                pre_Phi(:, k, j) = pre_Phi(:, k, j) * diag(1./sqrt(sum(pre_Phi(:, k, j) .* pre_Phi(:, k, j))));
             end
+        end
+        
+        figure(5)
+        for j=1:16;
+            subplot(4,4,j)
+            plot(pre_Phi(j, :, 1));
         end
         
     end
     
-    figure(5)
-    for i=1:16;
-        subplot(4,4,i)
-        plot(pre_Phi(i, :, 1));
-    end
 end
 
 pre_a = time_sparsify(data, pre_Phi, lambda);
