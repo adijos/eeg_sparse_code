@@ -19,6 +19,7 @@ const mxArray* A_freq;
 double* A_freq_real;
 double* A_freq_imag;
 mxArray* S;
+mxArray* rec1;
 double* S_real;
 
 const mxArray* AtA;
@@ -34,7 +35,7 @@ mxArray* dummy_real;
 mxArray* dummy_real2;
 mxArray* dummy_real3;
 mxArray* dummy_complex;
-double* zeros;
+double* zeross;
 
 dPrintf(char* str){
   /*mexPrintf(str);*/
@@ -283,6 +284,7 @@ void get_responses()
 
     /* Compute the reconstruction. */
     mxArray* rec = get_reconstruction(A_freq, S);
+    memcpy(rec1, rec, patch_M * patch_N * num_channels * sizeof(double));
     double *rec_real, *rec_imag;
     get_real_imag(&rec_real, &rec_imag, rec);
     
@@ -468,13 +470,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   const mwSize* dims;
   mwSize dims_[3];
+  const mwSize* dims1;
+  mwSize dims1_[3];
   const double* dummy_p_old1, *dummy_p_old2, *dummy_p_old3;
   int i,j, k;
   const double* S_old;
 
   tisc_init();
   
-  mxAssert(nlhs==1 || nlhs==3,"Expects one or three output arguments.\n");
+  mxAssert(nlhs==1 || nlhs==4,"Expects one or three output arguments.\n");
   mxAssert(nrhs==10,"Expects 10 input arguments.\n");
 
   mxAssert(mxIsDouble(prhs[0]), "get_responses_mex: X must be a double array.\n");
@@ -526,8 +530,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   dims_[0] = patch_M;
   dims_[1] = patch_N;
   dims_[2] = num_bases;
+  
+  dims1_[0] = patch_M;
+  dims1_[1] = patch_N;
+  dims1_[2] = num_channels;
 
   plhs[0] = mxCreateNumericArray(3,dims_,mxDOUBLE_CLASS,mxREAL);
+  plhs[3] = mxCreateNumericArray(3,dims1_,mxDOUBLE_CLASS,mxREAL);
+  rec1 = plhs[3];
   S = plhs[0];
   S_real = mxGetPr(S);
 
@@ -538,11 +548,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   memcpy(S_real,S_old,patch_M*patch_N*num_bases*sizeof(double));
 
-  zeros = mxCalloc(patch_M*patch_N*num_bases,sizeof(double));
+  zeross = mxCalloc(patch_M*patch_N*num_bases,sizeof(double));
   for (i=0; i<patch_M*patch_N*num_bases; i++)
-    zeros[i] = 0;
+    zeross[i] = 0;
   
-  compute_stats = (nlhs==3);
+  compute_stats = (nlhs==4);
   if (compute_stats){
     plhs[1] = mxCreateDoubleMatrix(max_iter+1, 1, mxREAL);
     times_all = mxGetPr(plhs[1]);

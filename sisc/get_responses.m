@@ -1,4 +1,4 @@
-function [S,coef_stats]=get_responses(X,A,beta,coef_pars,patch_num,S,AtA)
+function [S,coef_stats, rec]=get_responses(X,A,beta,coef_pars,patch_num,S,AtA)
 
 % GET_RESPONSES Wrapper function for computing activations using all of the algorithms. Currently
 %   supported algorithms: gradient_descent, feature_sign, feature_sign_mex, lars.
@@ -78,18 +78,18 @@ if coef_pars.tile,
   fspars = beta*sum(sum(sum(abs(S))));
   coef_stats.f_obj = fres + fspars;
 else,
-  [S,coef_stats] = get_responses_helper(X, A, beta, coef_pars, patch_num, S, AtA, A_freq);
+  [S,coef_stats, rec] = get_responses_helper(X, A, beta, coef_pars, patch_num, S, AtA, A_freq);
 end
 
 
 
 
-function [S,coef_stats] = get_responses_helper(X, A, beta, coef_pars, patch_num, S, AtA, A_freq);
+function [S,coef_stats, rec] = get_responses_helper(X, A, beta, coef_pars, patch_num, S, AtA, A_freq);
 
 [patch_M, patch_N, num_channels, num_patches] = size(X);
 [basis_M, basis_N, ig, num_bases] = size(A);
 
-[S, times_all, fobj_all] = get_responses_mex(X, A, A_freq, coef_pars.coeff_iter, ...
+[S, times_all, fobj_all, rec] = get_responses_mex(X, A, A_freq, coef_pars.coeff_iter, ...
                                                 beta, coef_pars.exact, coef_pars.num_coords, ...
                                                 coef_pars.verbosity, S, AtA);
 

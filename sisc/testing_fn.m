@@ -1,27 +1,28 @@
-function testing_fn()
-
 % get default parameters
 pars = default_pars(struct);
-pars.basis_M = 50; % time window of basis (500hz -> 1s)
+pars.basis_M = 400; % time window of basis (400hz -> 1s)
 pars.basis_N = 1; % time of bases 1 dimensional
 pars.num_bases = 20; % 20 basis elements to learn (made 20 so diff from 16)
-pars.patch_M = 400; % time window of patches (500hz -> 5s)
+pars.patch_M = 1000; % time window of patches (4000hz -> 10s)
 pars.patch_N = 1; % time patches 1 dimensional
 num_pre_data_files = 20; % ONE FOR TESTING!
 coef_pars = default_coef_pars(struct);
-pars.beta = 75; % 200 default
+pars.beta = 130; % 200 default
 
 patch_M = pars.patch_M;
 patch_N = pars.patch_N;
 num_channels = 16; % 16 "channels" or electrodes
 num_patches = 1000; % number of patches
-num_test_patches = 10; % number of patches to test on
-batch_size = 100;
-num_trials = 100;
+num_test_patches = 1; % number of patches to test on
+batch_size = 50;
+num_trials = 10;
 
 base_file_pre = './data/Dog_2/Dog_2_preictal_segment_00';
+% 
+% A = load('bases.mat');
+% A = A.A;
 
-% Generate white noise bases, normalize
+%Generate white noise bases, normalize
 rand('seed', 100);
 A = randn(pars.basis_M,pars.basis_N,num_channels,pars.num_bases);
 
@@ -48,6 +49,7 @@ lambda = ones(pars.num_bases,1);
 num_batches = floor(num_patches/batch_size);
 if num_batches == 0, error('Not enough patches for that batch size.'); end;
 
+for k = 1:num_trials
 for i = 1:num_pre_data_files
     sprintf(strcat('Data File #', int2str(i)))
     
@@ -111,7 +113,7 @@ for i = 1:num_pre_data_files
     for tr=1:pars.num_trials,
         batch = mod(tr-1,num_batches);
         patches = batch_size*batch+(1:batch_size);
-        [A,batch_stats,lambda,s_all(:,patches)] = run_batcheeg(X_ALL_train(:,:,:,patches),A,pars,coef_pars,tr,true,lambda,s_all(:,patches));
+        [A,batch_stats,lambda,s_all(:,patches), rec1] = run_batcheeg(X_ALL_train(:,:,:,patches),A,pars,coef_pars,tr,true,lambda,s_all(:,patches));
         
         % Save timing information, compute objective function on test set
         total_time = total_time + batch_stats.coef_time_total + batch_stats.bases_time;
@@ -121,7 +123,7 @@ for i = 1:num_pre_data_files
         dummy_pars.exact = true;
         dummy_pars.coeff_iter = 10000;
         dummy_pars.num_coords = 100;
-        [A,batch_stats] = run_batcheeg(X_ALL_test,A,pars,dummy_pars,0,false);
+        [A,batch_stats, a, aa, rec2] = run_batcheeg(X_ALL_test,A,pars,dummy_pars,0,false);
         fobj_all(i+tr) = batch_stats.fobj_pre_total;
         figure(2); plot(fobj_all); title('Objective function by batch.');
         figure(3); plot(train_time,fobj_all); title('Objective function by time.');
@@ -146,10 +148,11 @@ for i = 1:num_pre_data_files
             end
             suptitle(['all channels of basis element ',int2str(choice)]);
             
+            
             figure(193487)
-            S_vis = reshape(full(s_all(:,choice)),400,1,20);
-            for arty=1:20;
-                subplot(4,5,arty)
+            S_vis = reshape(full(s_all(:,choice)),pars.patch_M,1,pars.num_bases);
+            for arty=1:pars.num_bases
+                subplot(5,4,arty)
                 plot(S_vis(:,1,arty))
             end
             suptitle(['activations for basis ', int2str(choice)]);

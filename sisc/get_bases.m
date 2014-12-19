@@ -29,10 +29,10 @@ if verbosity >= 1, fprintf('Time for computing CtC: %f\n', etime(clock,t0)); end
 
 % Solve dual problem
 if verbosity >= 1,
-  options = optimset('GradObj','on','Hessian','on','Display','iter');
+  options = optimset('GradObj','on','Hessian','on','Display','iter','Algorithm', 'trust-region-reflective');
   fprintf('Solving the dual problem.\n');
 else
-  options = optimset('GradObj','on','Hessian','on','Display','off');
+  options = optimset('GradObj','on','Hessian','on','Display','off', 'Algorithm', 'trust-region-reflective');
 end
 t0 = clock;
 [lambda,fobj] = fmincon(@(x) basis_dual_objective(CtC_all,Ctd_all,x,c),lambda,[],[],[],[],zeros(num_bases,1),[],[],options);

@@ -1,4 +1,4 @@
-function [A,stats,lambda,s_all]=run_batcheeg(X_all,A,pars,coef_pars,batch_num,learn,lambda,s_all)
+function [A,stats,lambda,s_all, rec]=run_batcheeg(X_all,A,pars,coef_pars,batch_num,learn,lambda,s_all)
 
 % RUN_BATCH. Computes activations for all of the images in a batch, and possibly
 % solves for the bases given those activations.
@@ -69,7 +69,7 @@ for p=1:num_patches,
   
   % Solve for the activations
   fprintf('getting responses')
-  [s,coef_stats] = get_responses(X,A,pars.beta,coef_pars,p,s,AtA);
+  [s,coef_stats, rec] = get_responses(X,A,pars.beta,coef_pars,p,s,AtA);
   fobj = coef_stats.f_obj;
   
   t1 = clock;
