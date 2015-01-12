@@ -1,4 +1,0 @@
-
-
-BaseDir .
-SparsenetImages data/IMAGES.mat
