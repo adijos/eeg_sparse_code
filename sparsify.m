@@ -110,8 +110,10 @@ figure(4)
 for j = 1:16;
     subplot(4, 4, j)
     hold on
-    plot(I(j, :), 'b');
-    plot(Ihat(j, :), 'g');
+    
+    plot(I(j, :), 'k');
+    plot(Ihat(j, :), 'b-');
+    
 end
 suptitle('Reconstructions');
 

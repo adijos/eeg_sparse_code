@@ -1,36 +1,45 @@
+function [Phi] = sparseeg(datatype, pars)
+
 % Script for learning preictal dictionaries for Dog 2
 % Data files are 10 min of 400 Hz sampled data. 239766 samples per file
+% datatype == 0 => preictal
+% datatype == 1 => interictal
 
+pars
 % Data Variables
-base_file_pre = './data/Dog_2/Dog_2_preictal_segment_00'; % data's home
-batch_size = 100; % # of random samples per batch 
-num_files = 20; % # of data files to train over
-T = 1200; % size of data samples (with replacement), 3 seconds
+if datatype == 0,
+    base_file = './data/Dog_2/Dog_2_preictal_segment_00';
+else
+    base_file = './data/Dog_2/Dog_2_interictal_segment_0';
+end
+batch_size = pars.batch_size; % # of random samples per batch 
+num_files = pars.num_files; % # of data files to train over
+T = pars.T; % size of data samples (with replacement), 3 seconds
 
 % Dimensions
-N = 16; % # of electrodes
-M = 32; % # of dictionary elements
-w = 401; % length of basis windows (1 second)
+N = pars.N; % # of electrodes
+M = pars.M; % # of dictionary elements
+w = pars.w; % length of basis windows (1 second)
 
 % buffer margin to pad
 marg = floor(w/2);
 num_valid = T - 2 * marg;
 
 % noise and sparse prior params
-noise_var = 0.1; % ??
-beta = 2;
-sigma = 1;
-eta_a = 1e-5;
+noise_var = pars.noise_var; % ??
+beta = pars.beta;
+sigma = pars.sigma;
+eta_a = pars.eta_a;
 
 % Phi - Dictionary initialized randomly
 Phi = randn(N, M, w);
 
 % learning parameters
-eta = 1; % dictionary learning rate
-VAR_GOAL = 1; % ??
+eta = pars.eta; % dictionary learning rate
+VAR_GOAL = pars.VAR_GOAL; % ??
 a_var = VAR_GOAL * ones(M,1);
-var_eta = 0.1; % ??
-alpha = .02; % ??
+var_eta = pars.var_eta; % ??
+alpha = pars.alpha; % ??
 gain = sqrt(sum(sum(Phi .* Phi), 3))'; % ??
 
 % Objective Function Record
@@ -41,15 +50,27 @@ while 1
   % iterate through all the data files
   for i = 1:num_files
       sprintf(strcat('Data File #', int2str(i)))
-        
-      if i < 10
-          data = load(strcat(base_file_pre,'0',int2str(i)));
-      else
-          data = load(strcat(base_file_pre, int2str(i)));
-      end
       
-      data = getfield(data, strcat('preictal_segment_', int2str(i)));
-      full_data = data.data;
+      if datatype == 0,
+              if i < 10
+                  data = load(strcat(base_file,'0',int2str(i)));
+              else
+                  data = load(strcat(base_file, int2str(i)));
+              end
+
+              data = getfield(data, strcat('preictal_segment_', int2str(i)));
+              full_data = data.data;
+      elseif datatype == 1,
+              if i < 10
+                  data = load(strcat(base_file,'00',int2str(i)));
+              elseif i > 9 && i < 100,
+                  data = load(strcat(base_file,'0',int2str(i)));
+              else,
+                  data = load(strcat(base_file,int2str(i)));
+              end
+              data = getfield(data, strcat('interictal_segment_',int2str(i)));
+              full_data = data.data;
+      end
       
       % Subtract out the mean and make unit variance
       full_data = full_data - mean(mean(full_data));
