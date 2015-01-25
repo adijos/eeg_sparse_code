@@ -60,3 +60,7 @@ if ~isfield(pars, 'eta'), pars.eta = 1; end;
 if ~isfield(pars, 'VAR_GOAL'), pars.VAR_GOAL = 1; end;
 if ~isfield(pars, 'var_eta'), pars.var_eta = 0.1; end;
 if ~isfield(pars, 'alpha'), pars.alpha = 0.02; end;
+
+if ~isfield(pars, 'visualize_fixed'), pars.visualize_fixed = 0; end;
+
+end

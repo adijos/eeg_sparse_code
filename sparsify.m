@@ -95,7 +95,7 @@ end
 figure(2)
 plot(error_record)
 title('Coefficient Objective Function');
-
+%{
 figure(3)
 for j = 1:16;
     subplot(4, 4, j)
@@ -116,6 +116,7 @@ for j = 1:16;
     
 end
 suptitle('Reconstructions');
+%}
 
 % figure(302)
 % for j = 1:16;

@@ -16,6 +16,21 @@ batch_size = pars.batch_size; % # of random samples per batch
 num_files = pars.num_files; % # of data files to train over
 T = pars.T; % size of data samples (with replacement), 3 seconds
 
+% visualize a fixed set of data after some number of iterations?
+visualize_fixed = 10; %pars.visualize_fixed; % iterations till visualize, default 0
+if visualize_fixed > 0,
+    fixed_data = load(strcat(base_file,'13'));
+    fixed_data = getfield(fixed_data, strcat('preictal_segment_13'));
+    full_data = fixed_data.data;
+    
+    % Subtract out the mean and make unit variance
+    full_data = full_data - mean(mean(full_data));
+    full_data = full_data /sqrt(mean(mean(full_data.^2)));
+    idx = randi(size(full_data, 2) - T);
+    fixed_data = full_data(:, idx:idx + T - 1);
+end
+
+
 % Dimensions
 N = pars.N; % # of electrodes
 M = pars.M; % # of dictionary elements
@@ -44,6 +59,7 @@ gain = sqrt(sum(sum(Phi .* Phi), 3))'; % ??
 
 % Objective Function Record
 E_record = [];
+iter = 0; % count training iteration for recording
 
 while 1
     
@@ -140,7 +156,31 @@ while 1
         el = 90;
         view(az, el);
         colormap('gray');
-       end
+      end
+       
+      if visualize_fixed > 0 && mod(iter,visualize_fixed) == 0 && iter > 0,
+          [a, Ihat, e] = sparsify(Phi, gain, data, noise_var, beta, sigma, eta_a/sf);
+          
+          figure(323);
+          for channel=1:16;
+              subplot(4,4,channel);
+              plot(a(channel,:))
+          end
+          suptitle('Sparse Coefficients of Fixed Data')
+          
+          figure(342);
+          for channel=1:16;
+              subplot(4,4,channel);
+              hold on
+              plot(fixed_data(channel,:),'k')
+              plot(Ihat(channel,:), 'b')
+          end
+          suptitle('Reconstructions of Fixed Data')
+              
+      end
+      
+      % count iteration of training
+      iter = iter + 1
       % 
       
       
