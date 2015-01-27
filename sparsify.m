@@ -6,7 +6,7 @@ T = size(I, 2);
 
 num_iterations = 20;
 
-lambda_N = 1/noise_var; % ??
+lambda_N = 1/noise_var; 
 bos = beta/sigma;
 
 % Padding Dimensions
@@ -56,6 +56,13 @@ for iter = 1:num_iterations
   grada = 0;
   for t = 1:w
     tt = t:T - (w - t);
+    % The gradient update is scaled proportional to the inverse of
+    % the variance of noise in the data (lambda_N). Why? Possibly because
+    % if the data is very noisy (higher variance) then we don't want to
+    % update the gradient as much because we are less confident as to how
+    % much of the correlation between the dictionaries and the residual is
+    % actually due to true error in the residual as opposed to error
+    % created by noise. And vice versa if the data is less noisy.
     grada = grada + lambda_N * Phi(:, :, t)' * e(:, tt);
   end
   

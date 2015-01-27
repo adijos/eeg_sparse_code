@@ -31,7 +31,6 @@ function pars = default_pars(pars,varargin)
 %    VAR_GOAL
 %    var_eta
 %    alpha
-%
 % adapted from default_pars.m in sisc by ng
 
 if mod(nargin,2) == 0, error('Optional arguments must come in pairs.'); end;
@@ -44,7 +43,7 @@ for curr=2:nargin-1,
   special_pars.(field) = val;
 end
 
-if ~isfield(pars, 'batch_size'), pars.batch_size = 1; end;
+if ~isfield(pars, 'batch_size'), pars.batch_size = 25; end;
 if ~isfield(pars, 'num_files'), pars.num_files = 20; end;
 if ~isfield(pars, 'T'), pars.T = 1200; end;
 if ~isfield(pars, 'N'), pars.N = 16; end;
@@ -54,7 +53,7 @@ if ~isfield(pars, 'w'), pars.w = 401; end;
 if ~isfield(pars, 'noise_var'), pars.noise_var = 0.1; end;
 if ~isfield(pars, 'beta'), pars.beta = 2; end;
 if ~isfield(pars, 'sigma'), pars.sigma = 1; end;
-if ~isfield(pars, 'eta_a'), pars.eta_a = 1e-5; end;
+if ~isfield(pars, 'eta_a'), pars.eta_a = 1e-7; end;
 
 if ~isfield(pars, 'eta'), pars.eta = 1; end;
 if ~isfield(pars, 'VAR_GOAL'), pars.VAR_GOAL = 1; end;

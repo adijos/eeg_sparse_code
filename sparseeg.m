@@ -41,25 +41,31 @@ marg = floor(w/2);
 num_valid = T - 2 * marg;
 
 % noise and sparse prior params
-noise_var = pars.noise_var; % ??
-beta = pars.beta;
+noise_var = pars.noise_var; % see lines 9 and 59 in sparsify
+% beta determines the sparse penalty. larger beta == greater sparse penalty
+beta = pars.beta; 
+% sigma determines the threshold at which coefficient values
+% either get pushed down to 0 or boosted up. The derivative pushes
+% coefficients greater if above this value and down towards zero if below
 sigma = pars.sigma;
-eta_a = pars.eta_a;
+eta_a = pars.eta_a; % coefficient learning rate
 
 % Phi - Dictionary initialized randomly
 Phi = randn(N, M, w);
 
 % learning parameters
 eta = pars.eta; % dictionary learning rate
-VAR_GOAL = pars.VAR_GOAL; % ??
-a_var = VAR_GOAL * ones(M,1);
-var_eta = pars.var_eta; % ??
+VAR_GOAL = pars.VAR_GOAL; % see
+a_var = VAR_GOAL * ones(M,1); % see line 133
+var_eta = pars.var_eta; % see line 133
 alpha = pars.alpha; % ??
 gain = sqrt(sum(sum(Phi .* Phi), 3))'; % ??
 
 % Objective Function Record
 E_record = [];
 iter = 0; % count training iteration for recording
+% Variance Difference Record (a_var - VAR_GOAL)
+var_diff = [];
 
 while 1
     
@@ -121,22 +127,43 @@ while 1
               dPhi(:, :, t) = dPhi(:, :, t) + e(:, tt) * a';
           end
 
-          % ??
+          % Update the variance of the coefficients based on the variance
+          % of the last coefficient sample learned. Var_eta determines to 
+          % what degree the coefficient variance is updated according to
+          % the new sample. If var_eta is low, the variance will change only
+          % slightly on each sample and vice versa.
           a_var = (1 - var_eta) * a_var + var_eta * sum(a .* a,2)/num_valid;
           
       end
       
       % update bases
       dPhi = dPhi/(batch_size * num_valid);
-      Phi_old = Phi;
       Phi = Phi + eta * dPhi;
       
-      % normalize bases to match desired output variance ??
+      % The gain determines how the dictionaries should be adjusted.
+      % VAR_GOAL is the desired variance of the coefficients. In order to
+      % push the coefficient variance a_var towards VAR_GOAL, the
+      % dictionaries get pushed accordingly in order to compensate. This is
+      % what the gain is serving. If a_var > VAR_GOAL, then the dictionary
+      % values will increase by the gain so that the coefficient values
+      % become smaller and thus reduce their variance. Vice versa if a_var
+      % < VAR_GOAL. Alpha is a tiny value use to modulate the ratio. It is
+      % unclear why it was selected as it is. Plot this!
       gain = gain .* ((a_var/VAR_GOAL).^alpha);
-      normPhi=sqrt(sum(sum(Phi.*Phi),3));
+      normPhi = sqrt(sum(sum(Phi.*Phi),3));
       for i=1:M
-          Phi(:,i,:)=gain(i)*Phi(:,i,:)/normPhi(i);
+          Phi(:,i,:) = gain(i)*Phi(:,i,:)/normPhi(i);
       end
+      
+      % Plot the difference in coefficient and goal variance
+      var_diff = [var_diff (a_var - VAR_GOAL)];
+      size(var_diff)
+      figure(109);
+      hold all;
+      for l = 1:M
+          plot(var_diff(l, :));
+      end
+      title('Coefficient Variance - Goal Variance');
       
       % Compute objective function
       E = (0.5 * 1/noise_var * sum(e(:).^2) + beta * sum(S(a(:)/sigma)))/num_valid;
